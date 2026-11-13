@@ -1,0 +1,27 @@
+title: Capybara Informs
+description: Notes on Linux, HPC, programming, LaTeX and bioinformatics research.
+author: Lucas B. C. Rocha
+lang: en
+url: https://lucasbarbosarocha.github.io
+baseurl: /blog
+permalink: /:year/:month/:day/:title/
+timezone: America/Campo_Grande
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-seo-tag
+
+defaults:
+  - scope: { path: "", type: posts }
+    values: { layout: post }
+
+exclude: [README.md, Gemfile, Gemfile.lock, vendor, .bundle]

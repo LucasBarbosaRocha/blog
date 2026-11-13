@@ -1,0 +1,121 @@
+---
+layout: default
+---
+<section class="hero">
+  <h1>Notes from <em>someone</em>.</h1>
+  <p>Linux, Rocks cluster, programming, LaTeX and research in bioinformatics.</p>
+</section>
+
+{% assign research = site.posts | where: "category", "Research" %}
+{% if research.size > 0 %}
+<section class="block" id="research">
+  <h2 class="section-title">Research</h2>
+  <div class="block-body">
+    <div class="cards">
+      {% for post in research %}
+      <a class="card" href="{{ post.url | relative_url }}">
+        <span class="meta">{{ post.date | date: '%Y' }}</span>
+        <strong>{{ post.title }}</strong>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="block" id="posts">
+  <h2 class="section-title">All posts</h2>
+  <div class="block-body">
+    <div class="search" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <label for="q" class="skip">Search posts</label>
+      <input id="q" type="search" placeholder="Search posts (title, tags or content)…" autocomplete="off">
+    </div>
+    <p class="search-status" id="search-status" aria-live="polite"></p>
+
+    <div class="filters" role="group" aria-label="Filter by category">
+      <button type="button" class="chip is-active" data-cat="">All</button>
+      {% assign cats = site.posts | map: "category" | uniq %}
+      {% for c in cats %}<button type="button" class="chip" data-cat="{{ c | slugify }}">{{ c }}</button>{% endfor %}
+    </div>
+
+    {% assign years = site.posts | group_by_exp: "p", "p.date | date: '%Y'" %}
+    {% for y in years %}
+    <div class="year-group">
+      <h3 class="year">{{ y.name }}</h3>
+      <ul class="post-list">
+        {% for post in y.items %}
+        <li data-cat="{{ post.category | slugify }}" data-url="{{ post.url | relative_url }}" data-title="{{ post.title | append: ' ' | append: post.category | append: ' ' | append: post.tags | join: ' ' | escape }}">
+          <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          <span class="meta">{{ post.category }}{% if post.legacy %} · legacy{% endif %} · {{ post.date | date: '%b %-d' }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+    <p class="empty" id="no-results" hidden>No posts match your search.</p>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var input = document.getElementById('q');
+    var status = document.getElementById('search-status');
+    var empty = document.getElementById('no-results');
+    var chips = document.querySelectorAll('.chip');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.post-list li'));
+    var fullText = null; // url -> normalized title + tags + content, loaded on first use
+    var category = '';
+
+    function norm(s) {
+      return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    }
+
+    function loadIndex() {
+      if (fullText) return;
+      fullText = {};
+      fetch('{{ "/search.json" | relative_url }}')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          data.forEach(function (d) { fullText[d.url] = norm(d.text); });
+          apply();
+        })
+        .catch(function () { /* fall back to titles and tags */ });
+    }
+
+    function apply() {
+      var terms = norm(input.value).split(/\s+/).filter(Boolean);
+      // Match terms at the start of a word, so "mpi" finds MPI but not "compiling"
+      var patterns = terms.map(function (t) {
+        return new RegExp('(^|[^a-z0-9])' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      });
+      var shown = 0;
+      items.forEach(function (li) {
+        var haystack = fullText && fullText[li.dataset.url] || norm(li.dataset.title);
+        var match = (!category || li.dataset.cat === category) &&
+          patterns.every(function (p) { return p.test(haystack); });
+        li.hidden = !match;
+        if (match) shown++;
+      });
+      document.querySelectorAll('.year-group').forEach(function (g) {
+        g.hidden = !g.querySelector('li:not([hidden])');
+      });
+      empty.hidden = shown > 0;
+      status.textContent = terms.length || category ? shown + ' of ' + items.length + ' posts' : '';
+    }
+
+    input.addEventListener('focus', loadIndex);
+    input.addEventListener('input', function () { loadIndex(); apply(); });
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        category = chip.dataset.cat;
+        chips.forEach(function (c) { c.classList.toggle('is-active', c === chip); });
+        apply();
+      });
+    });
+
+    // Support links like /blog/?q=rocks
+    var initial = new URLSearchParams(location.search).get('q');
+    if (initial) { input.value = initial; loadIndex(); apply(); }
+  })();
+</script>

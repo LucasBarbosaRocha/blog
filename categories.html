@@ -1,0 +1,17 @@
+---
+layout: page
+title: Categories
+permalink: /categories/
+---
+{% assign groups = site.posts | group_by: "category" | sort: "name" %}
+{% for g in groups %}
+<h2 id="{{ g.name | slugify }}">{{ g.name }} <small>({{ g.size }})</small></h2>
+<ul class="post-list">
+  {% for post in g.items %}
+  <li>
+    <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+    <span class="meta">{{ post.date | date: '%b %-d, %Y' }}{% if post.legacy %} · legacy{% endif %}</span>
+  </li>
+  {% endfor %}
+</ul>
+{% endfor %}

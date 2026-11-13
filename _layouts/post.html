@@ -1,0 +1,35 @@
+---
+layout: default
+---
+<article class="post">
+  <header class="post-header">
+    <p class="meta">
+      <a class="cat" href="{{ '/categories/' | relative_url }}#{{ page.category | slugify }}">{{ page.category }}</a>
+      · <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%b %-d, %Y' }}</time>
+      · {{ content | number_of_words | divided_by: 200 | plus: 1 }} min read
+    </p>
+    <h1>{{ page.title }}</h1>
+  </header>
+
+  {% if page.legacy %}
+  <aside class="notice" role="note">
+    <strong>Legacy content.</strong> This post was written in {{ page.date | date: '%Y' }} for software versions
+    that are no longer maintained. Commands may need changes on current systems.
+  </aside>
+  {% endif %}
+
+  <div class="prose">
+    {{ content }}
+  </div>
+
+  {% if page.tags.size > 0 %}
+  <footer class="post-tags">
+    {% for t in page.tags %}<span class="tag">#{{ t }}</span>{% endfor %}
+  </footer>
+  {% endif %}
+
+  <nav class="post-nav" aria-label="More posts">
+    {% if page.previous %}<a class="prev" href="{{ page.previous.url | relative_url }}"><span>← Older</span>{{ page.previous.title }}</a>{% else %}<span></span>{% endif %}
+    {% if page.next %}<a class="next" href="{{ page.next.url | relative_url }}"><span>Newer →</span>{{ page.next.title }}</a>{% endif %}
+  </nav>
+</article>
